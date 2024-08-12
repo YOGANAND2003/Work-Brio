@@ -8,6 +8,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { USER_API_END_POINT } from '@/utils/constant';
 import { toast } from 'sonner';
 import axios from 'axios'; // Ensure axios is imported
+import { useDispatch, useSelector } from 'react-redux';
+import { setLoading } from '@/redux/authSlice';
+import { Loader2 } from 'lucide-react';
 
 const LogIn = () => {
   const [input, setInput] = useState({
@@ -16,38 +19,42 @@ const LogIn = () => {
     role: "",
   });
 
+  const { loading } = useSelector(store => store.auth);
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-        const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
-            headers: {
-                "Content-Type": "application/json"
-            },
-            withCredentials: true,
-        });
-        // console.log(res.data.success)
-        if (res.data.success) {
-            // Navigate first, then show the toast
-            navigate("/");
-            toast.success(res.data.message || "Login successful!");
-        } else {
-            toast.error(res.data.message || "Login failed. Please try again.");
-        }
+      dispatch(setLoading(true));
+      const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
+        headers: {
+          "Content-Type": "application/json"
+        },
+        withCredentials: true,
+      });
+      // console.log(res.data.success)
+      if (res.data.success) {
+        // Navigate first, then show the toast
+        navigate("/");
+        toast.success(res.data.message || "Login successful!");
+      } else {
+        toast.error(res.data.message || "Login failed. Please try again.");
+      }
     } catch (error) {
-        console.error("Error during login:", error);
-        // Show a more general error if specific message isn't available
-        const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again.";
-        toast.error(errorMessage);
+      console.error("Error during login:", error);
+      // Show a more general error if specific message isn't available
+      const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      dispatch(setLoading(false))
     }
-};
+  };
 
-  
-  
+
+
 
   return (
     <div>
@@ -105,7 +112,10 @@ const LogIn = () => {
               </div>
             </RadioGroup>
           </div>
-          <Button type="submit" className="w-full my-4">Login</Button>
+          {
+            loading ? <Button className='w-full my-4'><Loader2 className='mr-2 h-4 w-4 animate-spin' />Please wait</Button>:<Button type="submit" className="w-full my-4">Login</Button>
+          }
+          
           <span>Don't Have an Account? <Button className="bg-[#4596ec] text-white"><Link to="/signup">Signup</Link></Button></span>
         </form>
       </div>

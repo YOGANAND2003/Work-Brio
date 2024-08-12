@@ -8,6 +8,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { USER_API_END_POINT } from '@/utils/constant';
 import { toast } from 'sonner';
 import axios from 'axios'; // Ensure axios is imported
+import { useDispatch, useSelector } from 'react-redux';
+import store from '@/redux/store';
+import { setLoading } from '@/redux/authSlice';
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -18,6 +21,9 @@ const Signup = () => {
     role: "",
     file: ""
   });
+
+  const {loading} =useSelector(store=>store.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const changeEventHandler = (e) => {
@@ -40,6 +46,7 @@ const Signup = () => {
       formData.append("file", input.file);
     }
     try {
+      dispatch(setLoading(true));
       const res = await axios.post(`${USER_API_END_POINT}/register`, formData, {
         headers: {
           "Content-Type": "multipart/form-data"
@@ -60,6 +67,8 @@ const Signup = () => {
     } catch (error) {
       console.error("Error in API call:", error);
       toast.error(error.response?.data?.message || "An error occurred. Please try again.");
+    } finally{
+      dispatch(setLoading(false));
     }
   };
 
@@ -152,7 +161,9 @@ const Signup = () => {
               />
             </div>
           </div>
-          <Button type="submit" className="w-full my-4">Signup</Button>
+          {
+            loading ? <Button className='w-full my-4'><Loader2 className='mr-2 h-4 w-4 animate-spin' />Please wait</Button>:<Button type="submit" className="w-full my-4">Signup</Button>
+          }
           <span>Already have an account? <Button className="bg-[#4596ec] text-white"><Link to="/login">Login</Link></Button></span>
         </form>
       </div>

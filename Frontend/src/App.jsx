@@ -3,6 +3,7 @@ import NavBar from "./components/shared/Navbar.jsx";
 import Signup from "./components/auth/Signup.jsx";
 import Home from "./components/Home.jsx";
 import LogIn from "./components/auth/Login.jsx";
+import Jobs from "./components/Jobs.jsx";
 
 
 
@@ -19,6 +20,12 @@ const appRouter = createBrowserRouter([
     path: "/signup",
     element: <Signup/>
   },
+  {
+    path:"/jobs",
+    element:<Jobs/>
+
+  }
+
   
 
 ])
