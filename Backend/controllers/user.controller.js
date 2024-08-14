@@ -1,6 +1,8 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import getDataUri from "../utils/dataUri.js";
+import cloudinary from "../utils/cloudinary.js";
 
 export const register = async (req, res) => {
   try {
@@ -49,7 +51,7 @@ export const login = async (req, res) => {
     let user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: "Incorrect Email or assword",
+        message: "Incorrect Email or Password",
         success: false,
       });
     }
@@ -122,9 +124,12 @@ export const updateProfile = async (req, res) => {
     // }
 
     //Cloudinary comes here...
+    const fileUri = getDataUri(file);
+    const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+
     let skillsArray;
-    if(skills){
-       skillsArray = skills.split(",");
+    if (skills) {
+      skillsArray = skills.split(",");
     }
     const userId = req.id; //Middle ware Authentication
     let user = await User.findById(userId);
@@ -136,30 +141,34 @@ export const updateProfile = async (req, res) => {
     }
 
     //Updating Data
-    if(fullname) user.fullname = fullname
-    if(email) user.email = email
-    if(phoneNumber) user.phoneNumber = phoneNumber
-    if(bio) user.profile.bio = bio
-    if(skills) user.profile.skills = skillsArray
-
+    if (fullname) user.fullname = fullname;
+    if (email) user.email = email;
+    if (phoneNumber) user.phoneNumber = phoneNumber;
+    if (bio) user.profile.bio = bio;
+    if (skills) user.profile.skills = skillsArray;
 
     //Resume comes later here...
+    if (cloudResponse) {
+      user.profile.resume = cloudResponse.secure_url;  // Saves the Cloudinary URL
+      user.profile.resumeOriginalName = file.originalname; // Saves the original file name
+    }
+    
 
     await user.save();
 
     user = {
-        _id: user._id,
-        fullname: user.fullname,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        role: user.role,
-        profile: user.profile,
-      };
-      return res.status(200).json({
-        message:"Profile Updated Successfully",
-        user,
-        success:true
-      })
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      profile: user.profile,
+    };
+    return res.status(200).json({
+      message: "Profile Updated Successfully",
+      user,
+      success: true,
+    });
   } catch (error) {
     console.log(error);
   }
